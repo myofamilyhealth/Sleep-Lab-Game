@@ -278,6 +278,11 @@
       this._ro = new ResizeObserver(fit);
       this._loop = () => {
         controls.update();
+        // Keep the look-at target inside the room so panning can only move
+        // you around within the bedroom, never off into empty space.
+        if (this._orbitBounds) {
+          this._orbitBounds.clampPoint(controls.target, controls.target);
+        }
         renderer.render(scene, camera);
       };
       // Detached while three.js was fetching? Stay idle — the
@@ -328,6 +333,15 @@
         this._camera.far = dist * 100;
         this._camera.updateProjectionMatrix();
         this._controls.target.copy(sphere.center);
+        // Confine the orbit camera to the room: clamp zoom so you can't pull
+        // back past the framed view or tunnel into the geometry, keep the
+        // camera above the floor and clear of the ceiling, and hold the pan
+        // target within the room's bounds (enforced in the render loop).
+        this._controls.minDistance = dist * 0.2;
+        this._controls.maxDistance = dist;
+        this._controls.minPolarAngle = Math.PI * 0.12;
+        this._controls.maxPolarAngle = Math.PI * 0.5 - 0.05;
+        this._orbitBounds = box.clone();
         this._controls.update();
         const span = sphere.radius * 3;
         this._key.shadow.camera.left = -span;
