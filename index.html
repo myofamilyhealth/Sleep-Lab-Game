@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sleep Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.184.0/build/three.module.js",
+    "three/addons/controls/OrbitControls.js": "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js",
+    "three/addons/exporters/OBJExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js",
+    "three/addons/exporters/GLTFExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js"
+  },
+  "integrity": {
+    "https://unpkg.com/three@0.184.0/build/three.module.js": "sha384-8FCZ1eVO6it4+pbec2aDtnTrwjWXZLJRC+MAGCIPDgsYnUrl/E0A2YlF8ioMKI/J",
+    "https://unpkg.com/three@0.184.0/build/three.core.js": "sha384-dw2ooPewaEIrAgl6oFDBmmBWCE9oW9LxRGcfwZ0hLvEprzo202wXl7vCYHRlSnOT",
+    "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js": "sha384-4rziNxOBZKQ69i+w+f89KJ55TCYquwchVbByQwmaOeIOXdOU2PLDn3kOfXHwIJC9",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js": "sha384-nbwtoZENJD3Vq+ACK0CuGQdPMuDWHkamC2KJD70EV5nfg6jQjfppKOea07YJN+N3",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js": "sha384-VofkvpG6HERhFCYbsUOHeNXBCqID2nfqkQqnVzE1jc/oPcz+qJ13ADdXH08hE+cQ"
+  }
+}
+</script>
+<style>
+  :root{
+    --ink:#e9e5f2; --dim:#9a95b4; --line:rgba(233,229,242,.14);
+    --panel:rgba(18,17,32,.72); --amber:#f2b26b; --mint:#7fd8b6; --rose:#e77b93;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0a0913;color:var(--ink);
+    font-family:"Space Grotesk",system-ui,sans-serif;overflow:hidden}
+  a{color:var(--amber)} a:hover{color:#fff}
+  three-d-stage:not(:defined){visibility:hidden}
+  three-d-stage{position:absolute;top:0;left:0;bottom:0;right:372px;width:auto;height:100%}
+  #hud{position:absolute;top:0;right:0;bottom:0;width:372px;padding:22px 22px 18px;
+    display:flex;flex-direction:column;gap:16px;overflow-y:auto;
+    background:var(--panel);backdrop-filter:blur(18px);
+    border-left:1px solid var(--line);z-index:5}
+  #hud::-webkit-scrollbar{width:6px}
+  #hud::-webkit-scrollbar-thumb{background:rgba(233,229,242,.18);border-radius:3px}
+  .brand{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .brand h1{margin:0;font-size:19px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+  .brand span{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--dim);letter-spacing:.08em}
+  .group{display:flex;flex-direction:column;gap:8px}
+  .label{display:flex;justify-content:space-between;align-items:center;
+    font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--dim)}
+  .label b{color:var(--ink);font-weight:500;letter-spacing:.04em;text-transform:none;font-size:12px}
+  .seg{display:grid;gap:6px}
+  .seg.c2{grid-template-columns:1fr 1fr}
+  .seg.c3{grid-template-columns:repeat(3,1fr)}
+  .seg.c4{grid-template-columns:repeat(2,1fr)}
+  .seg button{font-family:"Space Grotesk",sans-serif;font-size:12.5px;color:var(--dim);
+    padding:9px 6px;border:1px solid var(--line);border-radius:9px;cursor:pointer;
+    background:rgba(255,255,255,.02);transition:.16s}
+  .seg button:hover{color:var(--ink);border-color:rgba(233,229,242,.32)}
+  .seg button[aria-pressed="true"]{background:rgba(242,178,107,.15);border-color:var(--amber);color:#fff}
+  input[type=range]{-webkit-appearance:none;width:100%;height:22px;background:transparent;cursor:pointer}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:rgba(233,229,242,.22)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;
+    border-radius:50%;background:var(--amber);margin-top:-6px}
+  #diagram{border:1px solid var(--line);border-bottom:none;border-radius:12px 12px 0 0;
+    background:rgba(255,255,255,.02);padding:6px;display:block}
+  #key{border:1px solid var(--line);border-radius:0 0 12px 12px;background:rgba(255,255,255,.02);
+    padding:10px 12px 11px;display:flex;flex-direction:column;gap:7px;
+    font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--dim);letter-spacing:.04em}
+  #key .row{display:flex;align-items:center;gap:8px}
+  #key .sw{width:16px;height:4px;border-radius:2px;flex:none}
+  #key .sw.tongue{height:8px;border-radius:3px;background:#e77b93}
+  #key .sw.lip{background:var(--amber)}
+  #key .sw.tissue{height:8px;border-radius:2px;background:rgba(233,229,242,.28)}
+  #key .scale{display:flex;align-items:center;gap:6px;margin-top:1px}
+  #key .scale i{flex:1;height:4px;border-radius:2px;font-style:normal}
+  #run{position:sticky;bottom:0;margin-top:2px;padding:15px;box-shadow:0 -14px 26px rgba(18,17,32,.9);border:none;border-radius:11px;cursor:pointer;
+    background:var(--amber);color:#17121f;font-family:"Space Grotesk",sans-serif;
+    font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase}
+  #run:hover{background:#ffc98a}
+  #run:disabled{background:rgba(233,229,242,.14);color:var(--dim);cursor:default}
+  #mfh{display:block;width:158px;margin:14px auto 2px;opacity:.4;
+    filter:grayscale(.15) brightness(1.9)}
+  #c-mark{position:absolute;top:26px;right:28px;width:34px;opacity:.28}
+  .sheet{position:relative}
+  .hint{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--dim);line-height:1.6}
+  #clock{position:absolute;left:26px;top:24px;z-index:4;font-family:"JetBrains Mono",monospace}
+  #clock .t{font-size:44px;font-weight:700;letter-spacing:.02em;line-height:1}
+  #clock .s{font-size:11px;color:var(--dim);letter-spacing:.18em;text-transform:uppercase;margin-top:6px}
+  #log{position:absolute;left:26px;bottom:104px;z-index:4;width:330px;display:flex;
+    flex-direction:column;gap:5px;font-family:"JetBrains Mono",monospace;font-size:11.5px}
+  #log div{color:var(--dim);opacity:0;transform:translateY(6px);animation:in .4s forwards}
+  #log div b{color:var(--amber);font-weight:500}
+  @keyframes in{to{opacity:1;transform:none}}
+  #card{position:absolute;inset:0;z-index:9;display:none;place-items:center;
+    background:rgba(6,5,14,.66);backdrop-filter:blur(6px)}
+  #card.on{display:grid}
+  .sheet{width:470px;max-height:92vh;overflow-y:auto;padding:34px;border-radius:18px;border:1px solid var(--line);
+    background:#141324;box-shadow:0 40px 90px rgba(0,0,0,.6)}
+  .sheet .cap{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--dim)}
+  .score{font-size:96px;font-weight:700;line-height:1;margin:6px 0 2px;letter-spacing:-.03em}
+  .verdict{font-size:16px;margin-bottom:22px}
+  .bars{display:flex;flex-direction:column;gap:11px;margin-bottom:24px}
+  .bar{display:grid;grid-template-columns:110px 1fr 44px;align-items:center;gap:10px;
+    font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--dim)}
+  .bar .track{display:block;height:4px;background:rgba(233,229,242,.12);border-radius:2px;overflow:hidden}
+  .bar .fill{display:block;height:100%;background:var(--amber);border-radius:2px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+  .bar .v{text-align:right;color:var(--ink)}
+  .chart-cap{display:flex;justify-content:space-between;align-items:baseline;
+    font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+  .chart-cap b{color:var(--ink);font-weight:500}
+  #c-chart{display:block;width:100%;height:auto;margin-bottom:20px}
+  #c-notes{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
+  .note{padding-left:12px;border-left:2px solid var(--amber)}
+  .note .nh{font-size:13px;font-weight:500;margin-bottom:3px}
+  .note .nb{font-size:12px;line-height:1.5;color:var(--dim);text-wrap:pretty}
+  .sheet button{width:100%;padding:14px;border-radius:11px;border:1px solid var(--line);
+    background:transparent;color:var(--ink);cursor:pointer;font-family:"Space Grotesk",sans-serif;
+    font-size:13px;letter-spacing:.1em;text-transform:uppercase}
+  .sheet button:hover{border-color:var(--amber);color:var(--amber)}
+</style>
+</head>
+<body>
+<three-d-stage name="cosy-bedroom" background="#0a0913"></three-d-stage>
+
+<div id="clock"><div class="t">23:00</div><div class="s">lights out</div></div>
+<div id="log"></div>
+
+<aside id="hud">
+  <div class="brand"><h1>Sleep Lab</h1></div>
+
+  <div class="group">
+    <div class="label"><span>Tongue rest</span><b id="v-tongue">Floor of mouth</b></div>
+    <div class="seg c4" data-key="tongue">
+      <button data-val="floor">Floor of mouth</button>
+      <button data-val="palate">Roof of mouth</button>
+      <button data-val="teeth">Behind lower teeth</button>
+      <button data-val="between">Between the teeth</button>
+    </div>
+    <svg id="diagram" viewBox="0 0 330 156" width="100%" height="150" aria-hidden="true">
+      <g fill="none" stroke="rgba(233,229,242,.42)" stroke-width="1.4" stroke-linejoin="round">
+        <path d="M58 26 C64 20 112 6 168 12 C214 17 236 38 240 56 L262 74 C266 78 262 82 256 82 L250 83
+                 C252 92 248 99 240 101 L242 112 C236 118 220 120 206 118 L200 132
+                 C186 142 150 146 122 142 L112 156"/>
+        <path d="M58 26 L58 156"/>
+      </g>
+      <path d="M150 84 L246 82" stroke="rgba(233,229,242,.55)" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path id="dg-soft" d="M150 84 Q136 96 142 112" stroke="rgba(233,229,242,.4)" stroke-width="3.2"
+            stroke-linecap="round" fill="none"/>
+      <path d="M112 34 Q160 40 196 52 Q168 66 132 66 Z" fill="rgba(233,229,242,.10)"/>
+      <path id="dg-tongue" d="" fill="#e77b93" opacity=".9"/>
+      <path d="M206 54 Q158 62 140 92 Q132 118 134 156" stroke="rgba(233,229,242,.13)"
+            stroke-width="16" stroke-linecap="round" fill="none"/>
+      <path id="dg-airway" d="M206 54 Q158 62 140 92 Q132 118 134 156" stroke="#7fd8b6"
+            stroke-width="10" stroke-linecap="round" fill="none" opacity=".55"/>
+      <path id="dg-lips" d="" stroke="#f2b26b" stroke-width="3.4" stroke-linecap="round" fill="none"/>
+      <g fill="rgba(233,229,242,.42)" font-family="JetBrains Mono, monospace" font-size="8" letter-spacing="1">
+        <text x="128" y="30">NASAL</text>
+        <text x="86" y="108">AIRWAY</text>
+        <text x="196" y="140">TONGUE</text>
+      </g>
+    </svg>
+    <div id="key">
+      <div class="row"><span class="sw tissue"></span><span>Palate, jaw &amp; throat tissue</span></div>
+      <div class="row"><span class="sw tongue"></span><span>Tongue — moves with your setting</span></div>
+      <div class="row"><span class="sw lip"></span><span>Lips — one line sealed, two parted</span></div>
+      <div class="row" style="margin-top:2px"><span>Airway channel — thickness&nbsp;=&nbsp;how open</span></div>
+      <div class="scale">
+        <i style="background:#e77b93"></i><i style="background:#f2b26b"></i><i style="background:#7fd8b6"></i>
+      </div>
+      <div class="row" style="justify-content:space-between"><span>collapsed</span><span>tight</span><span>clear</span></div>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="label"><span>Lips</span><b id="v-lips">Sealed</b></div>
+    <div class="seg c2" data-key="lips">
+      <button data-val="sealed">Sealed &amp; closed</button>
+      <button data-val="parted">Parted</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="label"><span>Position</span><b id="v-pos">On the back</b></div>
+    <div class="seg c3" data-key="pos">
+      <button data-val="back">Back</button>
+      <button data-val="side">Side</button>
+      <button data-val="front">Front</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="label"><span>Pillow height</span><b id="v-pillow">3</b></div>
+    <input id="pillow" type="range" min="1" max="5" step="1" value="3">
+  </div>
+
+  <div class="group">
+    <div class="label"><span>Room temperature</span><b id="v-temp">70°F</b></div>
+    <input id="temp" type="range" min="57" max="79" step="1" value="70">
+  </div>
+
+  <div class="group">
+    <div class="label"><span>Light</span><b id="v-light">Lamp on</b></div>
+    <div class="seg c3" data-key="light">
+      <button data-val="dark">Dark</button>
+      <button data-val="dim">Dim</button>
+      <button data-val="lamp">Lamp</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="label"><span>Last hour before bed</span><b id="v-wind">Screens</b></div>
+    <div class="seg c3" data-key="wind">
+      <button data-val="screens">Screens</button>
+      <button data-val="read">Reading</button>
+      <button data-val="quiet">Quiet dark</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="label"><span>The dog</span><b id="v-dog">On the floor</b></div>
+    <div class="seg c3" data-key="dog">
+      <button data-val="none">Another room</button>
+      <button data-val="floor">On the floor</button>
+      <button data-val="bed">On the bed</button>
+    </div>
+  </div>
+
+  <button id="run">Simulate night</button>
+  <img id="mfh" src="./assets/mfh-logo.png" alt="Myo Family Health">
+  <p class="hint">Best score recorded: <b id="best">—</b><br>Nights run: <span id="runs">0</span></p>
+</aside>
+
+<div id="card">
+  <div class="sheet">
+    <img id="c-mark" src="./assets/mfh-tree.png" alt="">
+    <div class="cap">07:00 — morning report</div>
+    <div class="score" id="c-score">0</div>
+    <div class="verdict" id="c-verdict"></div>
+    <div class="chart-cap"><span>Hypnogram</span><span>Wakeups: <b id="c-wakeups">0</b></span></div>
+    <svg id="c-chart" aria-hidden="true"></svg>
+    <div class="chart-cap"><span>Clinical notes</span></div>
+    <div id="c-notes"></div>
+    <div class="chart-cap"><span>Measures</span></div>
+    <div class="bars" id="c-bars"></div>
+    <button id="again">Try another night</button>
+  </div>
+</div>
+
+<script src="./three-d-stage.js"></script>
+<script type="module" src="./bedroom.js"></script>
+</body>
+</html>
