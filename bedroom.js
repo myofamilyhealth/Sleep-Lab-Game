@@ -167,9 +167,10 @@ moonLight.position.set(-1.0,2.6,-3.5); moonLight.target.position.set(-0.6,0.6,-0
 room.add(moonLight, moonLight.target);
 
 stage.setObject(room);
-// frame on the bed, from inside the room
+// frame on the bed, from inside the room. Orbit around the bed's centre:
+// the bed group sits at (-1.28, 0, -0.62), so its middle is ~(-1.28, 0.5, -0.62).
 stage._camera.position.set(1.9, 2.0, 1.6);
-stage._controls.target.set(-0.5, 0.95, -0.85);
+stage._controls.target.set(-1.28, 0.5, -0.62);
 stage._controls.minDistance = 1.2;
 stage._controls.maxDistance = 3.8;
 stage._controls.update();
