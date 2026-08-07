@@ -75,6 +75,7 @@
       overflow: hidden;
     }
     canvas { display: block; outline: none; }
+    @media (max-width: 760px) { .note { display: none; } }
     .note {
       position: absolute;
       left: 16px;
@@ -110,7 +111,7 @@
       root.appendChild(this._err);
       const note = document.createElement('div');
       note.className = 'note';
-      note.textContent = 'Drag to orbit · scroll to zoom · right-drag to pan';
+      note.textContent = 'Drag to orbit · scroll or pinch to zoom · two-finger drag to pan';
       root.appendChild(note);
       /** Resolves with { THREE } once the scene is live — build the model
        *  in `await stage.ready` so nothing races the library load. */
