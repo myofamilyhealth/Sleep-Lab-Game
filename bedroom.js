@@ -168,11 +168,19 @@ room.add(moonLight, moonLight.target);
 
 stage.setObject(room);
 // frame on the bed, from inside the room
-stage._camera.position.set(2.3, 2.15, 3.9);
+stage._camera.position.set(1.9, 2.0, 1.6);
 stage._controls.target.set(-0.5, 0.95, -0.85);
 stage._controls.minDistance = 1.2;
-stage._controls.maxDistance = 8;
+stage._controls.maxDistance = 3.8;
 stage._controls.update();
+// Boundaries: keep the camera inside the room. The floor is 4.4 x 3.8
+// centred on the origin (x -2.2..2.2, z -1.9..1.9) with 2.5 m walls, so the
+// camera is confined a touch inside the walls, above the floor, and below
+// the ceiling line — it can orbit/zoom/pan but never leaves the room.
+stage.setCameraBounds(
+  new THREE.Vector3(-2.1, 0.2, -1.8),
+  new THREE.Vector3( 2.1, 2.4,  1.8)
+);
 
 /* ---------- state ---------- */
 const S = { tongue:'floor', lips:'sealed', pos:'back', pillow:3, temp:70, light:'lamp', wind:'screens', dog:'floor' };

@@ -221,6 +221,11 @@
         if (this._orbitBounds) {
           this._orbitBounds.clampPoint(controls.target, controls.target);
         }
+        // Hard boundary: keep the camera itself inside the room — it can
+        // orbit, zoom, and pan, but never cross the walls, floor, or ceiling.
+        if (this._camBounds) {
+          this._camBounds.clampPoint(camera.position, camera.position);
+        }
         renderer.render(scene, camera);
       };
       // Detached while three.js was fetching? Stay idle — the
@@ -289,6 +294,19 @@
         this._key.shadow.camera.updateProjectionMatrix();
       }
       this._scene.add(object);
+    }
+
+    /** Confine the camera's position to a world-space box — the room's
+     *  walls, floor, and ceiling. Enforced every frame in the render loop,
+     *  so the camera can still orbit, zoom, and pan but can never leave the
+     *  room. Pass two THREE.Vector3 corners (min, max). */
+    setCameraBounds(min, max) {
+      const THREE = this._THREE;
+      if (!THREE) throw new Error('three-d-stage: not ready — await stage.ready first');
+      this._camBounds = new THREE.Box3(min.clone(), max.clone());
+      // Snap the camera inside immediately so the opening view is in-bounds.
+      this._camBounds.clampPoint(this._camera.position, this._camera.position);
+      this._controls.update();
     }
   }
 
